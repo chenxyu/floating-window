@@ -1,0 +1,3 @@
+include ':floatingwindow'
+include ':app'
+rootProject.name = "floating-window"
