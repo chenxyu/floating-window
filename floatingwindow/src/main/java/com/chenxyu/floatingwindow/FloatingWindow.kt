@@ -14,6 +14,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.annotation.Px
 import java.lang.ref.WeakReference
+import kotlin.math.abs
 
 /**
  * @Author:        ChenXingYu
@@ -83,10 +84,8 @@ class FloatingWindow(builder: Builder) {
     }
 
     fun dismiss() {
-        mCustomView?.let {
-            isShow = false
-            mWindowManager?.removeView(it)
-        }
+        isShow = false
+        mCustomView?.let { mWindowManager?.removeView(it) }
     }
 
     private fun showFloatingWindow() {
@@ -130,14 +129,12 @@ class FloatingWindow(builder: Builder) {
     }
 
     private fun magnet(v: View) {
-        if (isShow) {
-            val x = mLayoutParams?.x
-            x?.let {
-                if (it < 0) {
-                    intValueAnim(v, it, -mWindowWidth)
-                } else {
-                    intValueAnim(v, it, mWindowWidth)
-                }
+        val x = mLayoutParams?.x
+        x?.let {
+            if (it < 0) {
+                intValueAnim(v, it, -mWindowWidth)
+            } else {
+                intValueAnim(v, it, mWindowWidth)
             }
         }
     }
@@ -146,8 +143,10 @@ class FloatingWindow(builder: Builder) {
         val va = ValueAnimator.ofInt(from, to)
         va.duration = 300
         va.addUpdateListener {
-            mLayoutParams?.x = it.animatedValue as Int
-            mWindowManager?.updateViewLayout(view, mLayoutParams)
+            if (isShow) {
+                mLayoutParams?.x = it.animatedValue as Int
+                mWindowManager?.updateViewLayout(view, mLayoutParams)
+            }
         }
         va.start()
     }
@@ -177,12 +176,16 @@ class FloatingWindow(builder: Builder) {
     }
 
     private abstract class MoveTouchListener(private val view: View) : View.OnTouchListener {
+        private var downX = 0
+        private var downY = 0
         private var oldX = 0
         private var oldY = 0
 
         override fun onTouch(v: View, event: MotionEvent?): Boolean {
             when (event?.action) {
                 MotionEvent.ACTION_DOWN -> {
+                    downX = event.rawX.toInt()
+                    downY = event.rawY.toInt()
                     oldX = event.rawX.toInt()
                     oldY = event.rawY.toInt()
                 }
@@ -219,7 +222,17 @@ class FloatingWindow(builder: Builder) {
                     }
                     mWindowManager?.updateViewLayout(view, mLayoutParams)
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
+                    actionUpOrCancel(v)
+                    val newX = event.rawX.toInt()
+                    val newY = event.rawY.toInt()
+                    val moveX = newX - downX
+                    val moveY = newY - downY
+                    if (abs(moveX) > 1 || abs(moveY) > 1) {
+                        return true
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> {
                     actionUpOrCancel(v)
                 }
             }
