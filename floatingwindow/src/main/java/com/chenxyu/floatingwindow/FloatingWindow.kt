@@ -13,6 +13,8 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.annotation.Px
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import java.lang.ref.WeakReference
 import kotlin.math.abs
 
@@ -31,7 +33,11 @@ private var mCustomViewWidth: Int = 200
 private var mCustomViewHeight: Int = 200
 private var mWindowWidth: Int = 0
 private var mWindowHeight: Int = 0
-private var mCheckPermission: Boolean = true
+private var mCheckPermission: Boolean = false
+private lateinit var mDialogTitle: CharSequence
+private lateinit var mDialogMessage: CharSequence
+private lateinit var mDialogPositiveText: CharSequence
+private lateinit var mDialogNegativeText: CharSequence
 
 class FloatingWindow(builder: Builder) {
     init {
@@ -42,6 +48,26 @@ class FloatingWindow(builder: Builder) {
         mCustomViewWidth = builder.customViewWidth
         mCustomViewHeight = builder.customViewHeight
         mCheckPermission = builder.checkPermission
+        if (builder.dialogTitle.isNullOrEmpty()) {
+            mDialogTitle = activity.getText(R.string.dialog_title)
+        } else {
+            builder.dialogTitle?.let { mDialogTitle = it }
+        }
+        if (builder.dialogMessage.isNullOrEmpty()) {
+            mDialogMessage = activity.getText(R.string.dialog_message)
+        } else {
+            builder.dialogMessage?.let { mDialogMessage = it }
+        }
+        if (builder.dialogPositiveText.isNullOrEmpty()) {
+            mDialogPositiveText = activity.getText(R.string.dialog_goto_setting)
+        } else {
+            builder.dialogPositiveText?.let { mDialogPositiveText = it }
+        }
+        if (builder.dialogNegativeText.isNullOrEmpty()) {
+            mDialogNegativeText = activity.getText(R.string.dialog_refusal)
+        } else {
+            builder.dialogNegativeText?.let { mDialogNegativeText = it }
+        }
     }
 
     companion object {
@@ -63,16 +89,21 @@ class FloatingWindow(builder: Builder) {
         activity?.let {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (!Settings.canDrawOverlays(it.applicationContext) && mCheckPermission) {
-                    Toast.makeText(
-                        it.applicationContext,
-                        "No permission", Toast.LENGTH_SHORT
-                    ).show()
-                    it.startActivityForResult(
-                        Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:" + it.applicationContext.packageName)
-                        ), REQUEST_CODE
-                    )
+                    AlertDialog.Builder(it)
+                        .setTitle(mDialogTitle)
+                        .setMessage(mDialogMessage)
+                        .setPositiveButton(mDialogPositiveText) { _, _ ->
+                            it.startActivityForResult(
+                                Intent(
+                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                    Uri.parse("package:" + it.applicationContext.packageName)
+                                ), REQUEST_CODE
+                            )
+                        }
+                        .setNegativeButton(mDialogNegativeText) { dialog, _ ->
+                            dialog.cancel()
+                        }
+                        .show()
                 } else {
                     showFloatingWindow()
                 }
@@ -247,7 +278,11 @@ class FloatingWindow(builder: Builder) {
         var customView: View? = null
         var customViewWidth: Int = 200
         var customViewHeight: Int = 200
-        var checkPermission: Boolean = true
+        var checkPermission: Boolean = false
+        var dialogTitle: CharSequence? = null
+        var dialogMessage: CharSequence? = null
+        var dialogPositiveText: CharSequence? = null
+        var dialogNegativeText: CharSequence? = null
 
         /**
          * 自定义View
@@ -260,10 +295,48 @@ class FloatingWindow(builder: Builder) {
         }
 
         /**
-         * 检查权限（默认：true）
+         * 检查权限（默认：false）
          */
-        fun checkPermission(check: Boolean) {
+        fun checkPermission(check: Boolean): Builder {
             checkPermission = check
+            return this
+        }
+
+        /**
+         * 授权对话框配置
+         * @param title 授权对话框标题
+         * @param message 授权对话框信息
+         * @param positiveText 授权对话框确认
+         * @param negativeText 授权对话框取消
+         */
+        fun setPermissionDialog(
+            title: CharSequence? = null, message: CharSequence? = null,
+            positiveText: CharSequence? = null, negativeText: CharSequence? = null
+        ): Builder {
+            title?.let { dialogTitle = it }
+            message?.let { dialogMessage = it }
+            positiveText?.let { dialogPositiveText = it }
+            negativeText?.let { dialogNegativeText = it }
+            return this
+        }
+
+        /**
+         * 授权对话框配置
+         * @param title 授权对话框标题
+         * @param message 授权对话框信息
+         * @param positiveText 授权对话框确认
+         * @param negativeText 授权对话框取消
+         */
+        fun setPermissionDialog(
+            @StringRes title: Int? = null, @StringRes message: Int? = null,
+            @StringRes positiveText: Int? = null, @StringRes negativeText: Int? = null
+        ): Builder {
+            val activity = activityReference.get()
+            title?.let { dialogTitle = activity?.getString(it) }
+            message?.let { dialogMessage = activity?.getString(it) }
+            positiveText?.let { dialogPositiveText = activity?.getString(it) }
+            negativeText?.let { dialogNegativeText = activity?.getString(it) }
+            return this
         }
 
         fun build(): FloatingWindow = FloatingWindow(this).apply {

@@ -18,6 +18,5 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_basis).setOnClickListener {
             startActivity(Intent(this,FwBasisActivity::class.java))
         }
-
     }
 }

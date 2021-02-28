@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="dialog_goto_setting">跳转设置</string>
+    <string name="dialog_refusal">拒绝</string>
+    <string name="dialog_title">授权请求</string>
+    <string name="dialog_message">申请覆盖物权限</string>
+</resources>

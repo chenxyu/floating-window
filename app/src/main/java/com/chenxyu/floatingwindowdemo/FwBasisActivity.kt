@@ -56,6 +56,7 @@ class FwBasisActivity : AppCompatActivity() {
 
         mFloatingWindow = FloatingWindow.Builder(this)
             .setCustomView(relativeLayout, 250, 150)
+            .checkPermission(true)
             .build()
 
         findViewById<Button>(R.id.show).setOnClickListener {
