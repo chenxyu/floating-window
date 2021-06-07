@@ -24,22 +24,22 @@ import kotlin.math.abs
  * @Description:   悬浮窗
  * @Version:       1.0
  */
-private var isShow: Boolean = false
-private var mWindowManager: WindowManager? = null
-private var mLayoutParams: WindowManager.LayoutParams? = null
-private var mActivityReference: WeakReference<Activity>? = null
-private var mCustomView: View? = null
-private var mCustomViewWidth: Int = 200
-private var mCustomViewHeight: Int = 200
-private var mWindowWidth: Int = 0
-private var mWindowHeight: Int = 0
-private var mCheckPermission: Boolean = false
-private lateinit var mDialogTitle: CharSequence
-private lateinit var mDialogMessage: CharSequence
-private lateinit var mDialogPositiveText: CharSequence
-private lateinit var mDialogNegativeText: CharSequence
-
 class FloatingWindow(builder: Builder) {
+    private var isShow: Boolean = false
+    private var mWindowManager: WindowManager? = null
+    private var mLayoutParams: WindowManager.LayoutParams? = null
+    private var mActivityReference: WeakReference<Activity>? = null
+    private var mCustomView: View? = null
+    private var mCustomViewWidth: Int = 200
+    private var mCustomViewHeight: Int = 200
+    private var mWindowWidth: Int = 0
+    private var mWindowHeight: Int = 0
+    private var mCheckPermission: Boolean = false
+    private lateinit var mDialogTitle: CharSequence
+    private lateinit var mDialogMessage: CharSequence
+    private lateinit var mDialogPositiveText: CharSequence
+    private lateinit var mDialogNegativeText: CharSequence
+
     init {
         mActivityReference = builder.activityReference
         val activity = mActivityReference?.get() as Activity
@@ -84,7 +84,8 @@ class FloatingWindow(builder: Builder) {
         }
     }
 
-    fun show(): FloatingWindow {
+    fun show(): Boolean {
+        if (isShow) return isShow
         val activity = mActivityReference?.get()
         activity?.let {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -105,13 +106,13 @@ class FloatingWindow(builder: Builder) {
                         }
                         .show()
                 } else {
-                    showFloatingWindow()
+                    return showFloatingWindow()
                 }
             } else {
-                showFloatingWindow()
+                return showFloatingWindow()
             }
         }
-        return this
+        return isShow
     }
 
     fun dismiss() {
@@ -119,7 +120,7 @@ class FloatingWindow(builder: Builder) {
         mCustomView?.let { mWindowManager?.removeView(it) }
     }
 
-    private fun showFloatingWindow() {
+    private fun showFloatingWindow(): Boolean {
         val activity = mActivityReference?.get() as Activity
         mWindowManager =
             activity.application.getSystemService(Context.WINDOW_SERVICE) as WindowManager?
@@ -138,8 +139,9 @@ class FloatingWindow(builder: Builder) {
             setTouchListener(it)
             mWindowManager?.addView(it, mLayoutParams)
             isShow = true
+            return isShow
         }
-
+        return isShow
     }
 
     private fun setTouchListener(view: View) {
@@ -182,6 +184,9 @@ class FloatingWindow(builder: Builder) {
         va.start()
     }
 
+    /**
+     * 检查权限需要
+     */
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             REQUEST_CODE -> {
@@ -206,7 +211,7 @@ class FloatingWindow(builder: Builder) {
         }
     }
 
-    private abstract class MoveTouchListener(private val view: View) : View.OnTouchListener {
+    private abstract inner class MoveTouchListener(private val view: View) : View.OnTouchListener {
         private var downX = 0
         private var downY = 0
         private var oldX = 0
@@ -339,8 +344,7 @@ class FloatingWindow(builder: Builder) {
             return this
         }
 
-        fun build(): FloatingWindow = FloatingWindow(this).apply {
-
-        }
+        fun build(): FloatingWindow = FloatingWindow(this)
     }
+
 }

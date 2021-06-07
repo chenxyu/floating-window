@@ -12,9 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setMargins
 import com.chenxyu.floatingwindow.FloatingWindow
 
-private lateinit var mFloatingWindow: FloatingWindow
-
 class FwBasisActivity : AppCompatActivity() {
+    private lateinit var mFloatingWindow: FloatingWindow
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fw_basis)
