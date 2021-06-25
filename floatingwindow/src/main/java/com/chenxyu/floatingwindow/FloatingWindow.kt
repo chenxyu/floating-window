@@ -24,7 +24,7 @@ import kotlin.math.abs
  * @Description:   悬浮窗
  * @Version:       1.0
  */
-class FloatingWindow(builder: Builder) {
+class FloatingWindow private constructor(builder: Builder) {
     private var isShow: Boolean = false
     private var mWindowManager: WindowManager? = null
     private var mLayoutParams: WindowManager.LayoutParams? = null
